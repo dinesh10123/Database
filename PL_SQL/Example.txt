@@ -1,0 +1,298 @@
+CREATE DATABASE studentdb;
+
+USE studentdb;
+
+CREATE TABLE students (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    course VARCHAR(100),
+    fee DOUBLE
+);
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(100)
+);
+
+-- Insert default admin
+INSERT INTO users (username, password) VALUES ('admin', 'admin123');
+
+SELECT user, host FROM mysql.user;
+
+-- If not, create it:
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'Pass@100123';
+
+-- Grant permissions:
+GRANT ALL PRIVILEGES ON studentdb.* TO 'admin'@'localhost';
+FLUSH PRIVILEGES;
+
+SELECT * FROM users;
+INSERT INTO users (username, password) VALUES ('admin', 'admin123')
+ON DUPLICATE KEY UPDATE password='admin123';
+
+RENAME TABLE students TO student;
+
+
+drop table employees;
+CREATE TABLE employees (
+ emp_id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(50),
+ salary DECIMAL(10,2),
+ department VARCHAR(30)
+);
+INSERT INTO employees (name, salary, department)
+VALUES ('Alice', 50000, 'HR'),
+ ('Bob', 60000, 'IT'),
+ ('Charlie', 70000, 'Finance');
+ 
+ drop table departments;
+ CREATE TABLE departments (
+ dept_id INT AUTO_INCREMENT PRIMARY KEY,
+ dept_name VARCHAR(30),
+ location VARCHAR(30)
+);
+INSERT INTO departments (dept_name, location)
+VALUES ('HR', 'Hyderabad'),
+ ('IT', 'Bangalore'),
+ ('Finance', 'Delhi');
+ 
+create database labdb;
+ use labdb;
+-- Que 1
+delimiter //
+create procedure updatesalary()
+begin
+	update employees set salary=50000;
+end //
+delimiter ;
+CALL updatesalary();
+
+select * from employees;
+
+
+SET SQL_SAFE_UPDATES = 1;
+select * from employees;
+select * from departments;
+
+-- Que 2
+delimiter //
+create procedure deleteemployee()
+begin 
+	delete from employees where department='HR';
+end //
+delimiter ;
+SET SQL_SAFE_UPDATES = 0;
+call deleteemployee();
+
+select * from employees;
+
+-- Que 3
+delimiter //
+create procedure IncreaseSal()
+begin
+	update employees set salary = salary * 1.05;
+end //
+delimiter ;
+call IncreaseSal();
+
+select * from employees;
+
+-- Que 4
+delimiter //
+create procedure Employeeinsert(
+		in emp_id int,
+        in name varchar(50),
+        in salary int,
+        in department varchar(20))
+	begin
+		insert into employees values(emp_id, name, salary, department);
+	end //
+    delimiter ;
+    call Employeeinsert(5, 'Sham', 60000, 'HR');
+select * from employees;
+
+-- Que 5
+delimiter //
+create procedure insertDeptVal(
+		in dept_id int,
+		in dept_name varchar(20),
+        in location varchar(20))
+	begin
+		insert into departments values (dept_id, dept_name, location);
+	end //
+delimiter ;
+	call insertDeptVal(4, 'IT', 'Pune');
+
+select * from departments;
+
+-- Que 6
+delimiter //
+create procedure deleteemployees(in e_name varchar(20))
+begin 
+	delete from employees where name=e_name;
+end //
+delimiter ;
+call deleteemployees('Sham');
+
+-- Que 7
+delimiter //
+create procedure EmplUpdate(in dept varchar(20), in ename varchar(20))
+begin 
+	update employees set department=dept where name=ename;
+end //
+delimiter ;
+call EmplUpdate('HR', 'Bob');
+
+-- Que 8
+delimiter //
+create procedure highSalary(out sal int)
+begin 
+	select max(salary) into sal from employees;
+end //
+delimiter ;
+call highSalary(@sal);
+select @sal as High_Salary;
+
+-- Que 9
+delimiter //
+create procedure avgsal(out sal int)
+begin
+	select avg(salary) into sal from employees;
+end //
+delimiter ;
+call avgsal(@sal);
+select @sal as Average;
+
+-- Que 10
+delimiter //
+create procedure departmentCount(out dept int)
+begin 
+	select count(department) into dept from employees;
+end //
+delimiter ;
+call departmentCount(@dept);
+select @dept as total;
+
+-- Que 11
+delimiter //
+create procedure getemployee(in id int, out ename varchar(20))
+begin 
+	select name into ename from employees where emp_id=id;
+end //
+delimiter ;
+call getemployee(3, @ename);
+select @ename as Name;
+
+-- Que 12
+delimiter //
+create procedure SalaryIncrease(in sal int)
+begin 
+	update employees set salary=salary+(salary*sal/100);
+end //
+delimiter ;
+call SalaryIncrease(10);
+
+select * from employees;
+
+-- Que 13
+delimiter //
+create procedure Salarybonus(in id int, inout bonus int)
+begin
+	update employees set salary=salary+bonus where emp_id=id;
+    select salary into bonus from employees where emp_id=id;
+end //
+delimiter ;
+set @bonus = 2000;
+SET SQL_SAFE_UPDATES = 0;
+call Salarybonus(2, @bonus);
+select @bonus as Updated_Sal;
+
+select * from employees;
+use labdb;
+
+-- que 14
+delimiter //
+create procedure moveEmployee(in id int, inout dept varchar(20))
+begin
+	update employees set department=dept where id=emp_id;
+    
+    select department into dept from employees where id=emp_id;
+end //
+delimiter ;
+set @department='Cyber';
+call moveEmployee(2, @department);
+select @department as Updated_Emp;
+
+select * from departments;
+
+-- Que 15
+delimiter //
+create procedure updateLoc(in d_id int, inout loc varchar(20))
+begin
+	update departments set location=loc where d_id=dept_id;
+    select location into loc from departments where d_id=dept_id;
+end //
+delimiter ;
+set @newLocation = 'Jalgaon';
+call updateLoc(2, @newLocation);
+select @newLocation as Updated_Loc;
+select * from departements;
+
+-- Que 16  Create a procedure to show employees earning above a given salary (IN parameter)
+delimiter //
+create procedure showsalary(in sal int)
+begin
+	select * from employees where salary > sal;
+end //
+delimiter ;
+call showsalary(50000);
+show tables;
+select * from departments;
+
+
+-- Que 17  Create a procedure to show all departments in a specific location (IN parameter).
+delimiter //
+create procedure showdept(in loc varchar(20))
+begin
+	select dept_name from departments where location=loc;
+end //
+delimiter ;
+call showdept('Pune');
+
+
+-- Que 18 Create a procedure to delete a department by name (IN parameter).
+delimiter //
+create procedure deledept(in e_name varchar(20))
+begin
+	delete from employees where e_name = name;
+end //
+delimiter ;
+SET SQL_SAFE_UPDATES = 0;
+call deledept('Bob');
+select * from employees;
+drop table employees;
+
+-- Que 19 Create a procedure to find the total salary paid in a department (IN and OUT parameter).
+delimiter //
+create procedure totalsal(in dept varchar(20), out sal int)
+begin 
+	select sum(salary) into sal from employees where department=dept;
+end //
+delimiter ;
+call totalsal('HR', @tot_sal);
+select @tot_sal as Total_salary;
+
+-- Que 20 Create a procedure to find the minimum salary and return it (OUT parameter)
+delimiter //
+create procedure minsal(out sal int)
+begin 
+	select min(salary) into sal from employees;
+end //
+delimiter ;
+call minsal(@minsal);
+select @minsal as Min_Salary;
+
+
+

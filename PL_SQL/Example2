@@ -1,0 +1,174 @@
+create database bookstore;
+use bookstore;
+
+CREATE TABLE authors ( author_id INT AUTO_INCREMENT PRIMARY KEY,
+author_name VARCHAR(50), country VARCHAR(30) );
+
+INSERT INTO authors (author_name, country) VALUES ('Chetan Bhagat', 'India'), ('J.K.
+Rowling', 'UK'), ('George R.R. Martin', 'USA'), ('R.K. Narayan', 'India'), ('Agatha
+Christie', 'UK');
+
+CREATE TABLE books ( book_id INT AUTO_INCREMENT PRIMARY KEY, title
+VARCHAR(100), author_id INT, price DECIMAL(10,2), stock INT, published_year INT,
+FOREIGN KEY (author_id) REFERENCES authors(author_id) );
+
+INSERT INTO books (title, author_id, price, stock, published_year) VALUES ('Five
+Point Someone', 1, 250, 10, 2004), ('2 States', 1, 300, 5, 2009), ('Harry Potter', 2, 800, 15,
+1997), ('Game of Thrones', 3, 1200, 8, 1996), ('Malgudi Days', 4, 200, 12, 1943), ('Murder
+on the Orient Express', 5, 500, 6, 1934);
+
+select * from books;
+drop table books;
+-- Que 1 Write a function to return the total number of books in stock
+delimiter //
+create function totalbook()
+returns int deterministic 
+begin 
+	declare total int default 0;
+	select sum(stock) into total from books;
+	return total;
+end //
+delimiter ;
+select totalbook() as Total_Books;
+
+-- Que 2 Write a function to return the price of a given book title.
+delimiter //
+create function book_price(b_title varchar(20))
+returns int deterministic
+begin 
+	declare b_price int default 0;
+	select price into b_price from books where title=b_title;
+    return b_price;
+end //
+delimiter ;
+select book_price('2 States') as price;
+
+select * from authors;
+select * from books;
+-- Que 3 Write a function to find how many books an author has written.
+delimiter //
+create function countbook(authorName varchar(20))
+returns int deterministic
+begin 
+	declare total int default 0;
+    select count(book_id) into total
+    from books b
+    join authors a
+    on b.author_id=a.author_id
+    where a.author_name=authorName;
+    
+    return total;
+end //
+delimiter ;
+select countbook('Chetan Bhagat') as total_book;
+
+-- Que 4 Write a function to return whether a book is "Old" or "New" based on its published year
+-- (before 2000 → Old, else → New).
+delimiter //
+create function b_category(published_year int)
+returns varchar(20) deterministic
+begin
+	if published_year > 2000 then
+		return 'New' ;
+	else
+		return 'Old';
+	end if;
+end //
+delimiter ;
+select b_category(2004) Book;
+
+-- Que 5 Write a function to calculate a 10% discount on the price of a given book.
+delimiter //
+create function cal_discount(b_title varchar(20))
+returns decimal(10, 2) deterministic
+begin
+	declare org_price decimal(10, 2);
+    declare dis_price decimal(10, 2);
+    select price into org_price from books where title=b_title;
+    set dis_price = org_price - (org_price*10/100);
+    return dis_price;
+end //
+delimiter ;
+select cal_discount('Harry Potter') as Discount;
+
+-- Que 6 Write a function to return the author's country for a given book.
+delimiter //
+create function author_country(author_b varchar(20))
+returns varchar(20) deterministic
+begin
+	declare a_country varchar(20);
+	select a.country into a_country
+    from authors a
+    join books b
+    on a.author_id = b.book_id
+    where title=author_b;
+    return a_country;
+end //
+delimiter ;
+select author_country('2 States') as Country;
+
+-- Que 7 Write a function to find the total value of all books in stock (price × stock). 
+delimiter //
+create function totalval()
+returns int deterministic
+begin 
+	declare total_price int default 0;
+    select sum(price*stock) into total_price from books;
+    return total_price;
+end //
+delimiter ;
+select totalval() as Total;
+
+select * from books;
+-- Que 8 Write a function to return the oldest book title in the store. 
+delimiter //
+create function olddest_bk()
+returns varchar(50) deterministic
+begin
+	declare b_title varchar(50);
+    select title into b_title from books order by published_year asc limit 1;
+    return b_title;
+end //
+delimiter ;
+select olddest_bk() as Oldest_Book;
+
+-- Que 9 Write a function to check if a given book is in stock or not. 
+delimiter //
+create function check_book(b_title varchar(50))
+returns varchar(20) deterministic
+begin 
+	declare available_stock int default 0;
+    declare status varchar(20);
+    select stock into available_stock from books where title=b_title;
+    if available_stock > 0 then
+		set status = 'Book is in stock';
+	else
+		set status = 'Book is not in stock';
+	end if;   
+	return status;
+end //
+delimiter ;
+select check_book('Harry Potter') as Result;
+
+-- Que 10 Write a function to return the total number of books available by authors 
+-- from a specific country.
+drop function if exists tot_book;
+delimiter //
+create function tot_book(b_country varchar(50))
+returns int deterministic
+begin
+	declare total_b int default 0;
+    select count(book_id) into total_b
+    from books b
+    join authors a
+    on b.author_id = a.author_id
+    where a.country=b_country;
+    return total_b;
+end //
+delimiter ;
+select tot_book('India') as total_books;
+
+
+    
+
+

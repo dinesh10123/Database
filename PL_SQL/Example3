@@ -1,0 +1,233 @@
+create database sqldb;
+use sqldb;
+drop database sqldb;
+CREATE TABLE employees (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(50),
+department VARCHAR(30),
+salary DECIMAL(10,2)
+);
+
+INSERT INTO employees (name, department, salary) VALUES
+('Anita', 'HR', 25000),
+('Bhavesh', 'IT', 32000),
+('Chitra', 'Finance', 28000),
+('Deepak', 'IT', 40000),
+('Esha', 'HR', 35000),
+('Farhan', 'Finance', 30000);
+select * from employees;
+drop table employees;
+
+-- LOOP
+-- Que 1 increase salary of first 3 employees by 10% using loop
+drop procedure if exists inc_sal;
+delimiter //
+create procedure inc_sal()
+begin 
+	declare i int default 1;
+    inc_loop:loop
+		update employees set salary=salary+(salary  * 10)/100 where id = i;
+        set i = i+1;
+        if i>3 then
+			leave inc_loop;
+		end if;
+	end loop;
+end //
+delimiter ;
+call inc_sal();
+select * from employees;
+
+-- Que 2 Display all employee names using LOOP. 
+drop procedure if exists display_name;
+delimiter //
+create procedure display_name()
+begin
+	declare i int default 0;
+    declare total int;
+    select count(*) into total from employees;
+    create temporary table ename(name varchar(50));
+    name_loop:loop
+		insert into ename select name from employees where id=i;
+        set i = i + 1;
+        if i>total then
+			leave name_loop;
+		end if;
+	end loop;
+    select * from ename;
+end //
+delimiter ;
+call display_name();
+    
+
+
+-- Que 3 Calculate total salary of all employees using LOOP
+drop procedure if exists find_tot;
+delimiter //
+create procedure find_tot()
+begin 
+	declare i int default 1;
+    declare total int;
+    declare sum decimal(10, 2) default 0;
+    select count(*) into total from employees;
+    total_loop:loop
+		set sum = sum+(select salary from employees where id=i);
+        set i=i+1;
+        if i>total then
+			leave total_loop;
+		end if;
+	end loop;
+    select sum as total_salary;
+end //
+delimiter ;
+call find_tot();
+
+-- Que 4 Insert 3 new temporary employees into the table using LOOP.
+delimiter //
+create procedure insert_emp()
+begin
+	declare i int default 1;
+    insert_loop:loop
+		insert into employees (name, department, salary) 
+        values(concat('temporary ',i), 'IT', 10000+(10000*i));
+        set i = i+1;
+        if i>3 then
+			leave insert_loop;
+		end if;
+	end loop;
+end //
+delimiter ;
+call insert_emp();
+select * from employees;
+
+-- WHILE
+-- Que 5 Display employees having salary greater than ₹30,000.
+drop procedure if exists emp_Sal;
+delimiter //
+create procedure emp_sal()
+begin
+	declare i int default 1;
+    declare total int;
+    select count(*) into total from employees;
+    create temporary table if not exists emp( 
+		e_id INT auto_increment primary key,
+        name VARCHAR(50),
+        department VARCHAR(50),
+        salary DECIMAL(10,2));
+    while i<=total do
+		insert into emp
+		select * from employees where id=i and salary>30000;
+        set  i=i+1;
+	end while;
+    select * from emp;
+    drop temporary table if exists emp;
+end //
+delimiter ;
+call emp_sal();
+
+-- Que 6 Increase one employee’s salary incrementally by 5000 until it reaches ₹50,000.
+drop procedure if exists sal_inc;
+delimiter //
+create procedure sal_inc(emp_id int)
+begin
+	declare emp_salary decimal(10, 2);
+    select salary into emp_salary from employees where id = emp_id;
+    while emp_salary<50000 do
+		set emp_salary=emp_salary+5000;
+        update employees set salary=emp_salary where id=emp_id;
+	end while;
+    select id, name, emp_salary as new_salary from employees where id=emp_id;
+end //
+delimiter ;
+call sal_inc(1);
+select * from employees;
+
+-- Que 7 Count total IT department employees. 
+drop procedure if exists emp;
+delimiter //
+create procedure emp(dept varchar(20))
+begin
+	declare i int default 1;
+	declare total int default 0;
+    declare e_count int;
+	select count(*) into e_count from employees where department=dept;
+    while i<e_count do
+        set i = i + 1;
+	end while;
+    set total = i;
+    select total as Total_IT_Dept;
+end //
+delimiter ;
+call emp('IT');
+
+-- Repeat
+-- Que 8 Add ₹5,000 to one employee’s salary until it exceeds ₹40,000. 
+drop procedure if exists add_sal;
+delimiter //
+create procedure add_sal(emp_id int)
+begin
+	declare e_salary decimal(10,2);
+    select salary into e_salary from employees where id=emp_id;
+    repeat
+		set e_salary=e_salary+5000;
+        update employees set salary=e_salary where id=emp_id;
+	until e_salary>40000
+    end repeat;
+    select name, e_salary as New_salary from employees where id=emp_id;
+end //
+delimiter ;
+call add_sal(1);
+
+-- Que 9 Insert employees until 10 total records exist.
+drop procedure if exists insert_e; 
+delimiter //
+create procedure insert_e()
+begin
+	declare i int default 0;
+    declare e_count int;
+    select count(*) into e_count from employees;
+    repeat
+		insert into employees(name,department,salary) 
+        values(concat('Temp',i),'HR',20000+(20000*i));
+        set i=i+1;
+	until e_count+i>=10 
+    end repeat;
+end //
+delimiter ;
+call insert_e();
+select * from employees;
+
+-- Que 10 Keep adding bonuses until total crosses ₹1,00,000. 
+drop procedure if exists Add_Bonus_Until_OneLakh;
+DELIMITER $$
+CREATE PROCEDURE Add_Bonus_Until_OneLakh()
+BEGIN
+    DECLARE total DECIMAL(10,2) DEFAULT 0;
+    DECLARE bonus DECIMAL(10,2);
+    REPEAT
+        SET bonus = 20000; 
+        SET total = total + bonus;
+        SELECT CONCAT('Total: ₹', total) AS Message;
+    UNTIL total > 100000
+    END REPEAT;
+    SELECT CONCAT('Total crossed ₹1,00,000! Final Total: ₹', total) AS Result;
+END $$
+DELIMITER ;
+
+        
+
+    
+    
+   
+
+
+
+
+
+
+
+
+    
+    
+        
+    
+
